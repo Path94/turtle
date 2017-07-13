@@ -85,7 +85,7 @@ func (t *Turtle) load() (err error) {
 			}
 
 			var v Value
-			if v, ierr = fns.Unmarshal(value); err != nil {
+			if v, ierr = fns.Unmarshal(value); ierr != nil {
 				// Error encountered while unmarshaling, return and end the loop early
 				return true
 			}
@@ -128,7 +128,7 @@ func (t *Turtle) load() (err error) {
 	return ierr
 }
 
-func (t *Turtle) snapshot() (errs *errors.ErrorList) {
+func (t *Turtle) snapshot() (errs errors.ErrorList) {
 	// Acquire read-lock
 	t.mux.RLock()
 	// Defer release of read-lock
@@ -171,7 +171,7 @@ func (t *Turtle) snapshot() (errs *errors.ErrorList) {
 		return
 	}))
 
-	return
+	return errs
 }
 
 func (t *Turtle) Read(fn TxnFn) (err error) {
@@ -240,7 +240,9 @@ func (t *Turtle) Close() (err error) {
 
 	var errs errors.ErrorList
 	// Attempt to snapshot
-	errs.Push(t.snapshot())
+	tErrs := t.snapshot()
+	errs.Push(&tErrs)
+
 	// Close file back-end
 	errs.Push(t.mrT.Close())
 	return errs.Err()
