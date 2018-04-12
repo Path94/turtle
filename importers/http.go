@@ -1,6 +1,7 @@
 package importers
 
 import (
+	"crypto/tls"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -41,6 +42,15 @@ type HTTP struct {
 	url *url.URL
 	// HTTP headers
 	headers http.Header
+}
+
+// AllowInsecureTLS will allow
+func (h *HTTP) AllowInsecureTLS(state bool) {
+	h.hc.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: state,
+		},
+	}
 }
 
 func (h *HTTP) newRequest(txnID string) (req *http.Request, err error) {
